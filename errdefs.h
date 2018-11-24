@@ -2,6 +2,9 @@
 #ifndef ERRDEFS_H
 #define ERRDEFS_H
 
+namespace DriverFR
+{
+
 const char *errmsg[] =
 {
 	"Ошибок нет",                                                //0   0
@@ -255,4 +258,5 @@ const char *devcodedesc[] =
 	"FR base memory"
 };
 
+}
 #endif

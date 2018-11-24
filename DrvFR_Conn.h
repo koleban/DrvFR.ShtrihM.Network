@@ -5,6 +5,9 @@
 #include <sys/select.h>
 #include "DrvFR.h"
 
+namespace DriverFR
+{
+
 #define MAX_TRIES	10
 
 #define ENQ 			0x05
@@ -120,4 +123,5 @@ public:
 	int clearanswer(void);
 };
 
+}
 #endif

@@ -17,7 +17,8 @@
 #include <arpa/inet.h>
 
 #include "DrvFR_Conn.h"
-#include "DrvFR.h"
+
+using namespace DriverFR;
 
 int errorCode = 0;
 static DrvFR* drv;

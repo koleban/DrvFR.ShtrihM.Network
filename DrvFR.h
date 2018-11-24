@@ -5,6 +5,9 @@
 
 #include <time.h>
 
+namespace DriverFR
+{
+
 #ifndef MAX_LEN
 #define MAX_LEN 1024
 #endif
@@ -518,5 +521,7 @@ public:
 			bool useIPAddress
 		);
 };
+
+}
 
 #endif

@@ -17,7 +17,8 @@
 #include <math.h>
 #include "errdefs.h"
 #include "DrvFR_Conn.h"
-#include "DrvFR.h"
+
+using namespace DriverFR;
 
 DrvFR::DrvFR(int password,
 	int comNumber,
