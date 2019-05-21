@@ -41,13 +41,19 @@ DrvFR::DrvFR(int password,
 	TCPPort = tcpPort;
 	strcpy(IPAddress, (const char *)ipAddress);
 	UseIPAddress = useIPAddress;
+	#ifdef DEBUG
+	printf("DrvFR constructor:\n  Password: %d\n  Timeout: %d\n  IP: %s\n", Password, Timeout, IPAddress);
+	#endif
 }
 //-----------------------------------------------------------------------------
 //*****************************************************************************
 //-----------------------------------------------------------------------------
 int DrvFR::errhand(void *a)
 {
-	ResultCode = ((answer*)a)->buff[1];
+	if (((answer*)a)->buff[0] != 0xFF)
+		ResultCode = ((answer*)a)->buff[1];
+	else
+		ResultCode = ((answer*)a)->buff[2];
 	strcpy(ResultCodeDescription, errmsg[ResultCode]);
 	if (ResultCode != 0)
 	{
@@ -126,7 +132,13 @@ int DrvFR::Connect(void)
 	int state = 0;
 	answer      a;
 
-	if (conn == NULL) conn = new DrvFR_Conn(this);
+	if (conn == NULL)
+	{
+		#ifdef DEBUG
+		printf("DrvFR::Connect Create new instance:\n  Password: %d\n  Timeout: %d\n  IP: %s\n", Password, Timeout, IPAddress);
+		#endif
+		conn = new DrvFR_Conn(this);
+	}
 
 	if (Connected) conn->closedev();
 
@@ -164,7 +176,7 @@ int DrvFR::Connect(void)
 			if (GetECRStatus() < 0) { tries++; usleep(500000); continue; }
 			if (GetDeviceMetrics() < 0) { tries++; usleep(500000); continue; }
 			return 1;
-		case -1:
+		case 0xFF:
 			tries++;
 		};
 	};
@@ -186,6 +198,9 @@ int DrvFR::Beep(void)
 	parameter  p;
 	answer     a;
 
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	if (!Connected) return -1;
 
 	if (conn->sendcommand(BEEP, Password, &p) < 0) return -1;
@@ -203,6 +218,9 @@ int DrvFR::CutCheck(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 1;
 
 	if (!Connected) return -1;
@@ -224,6 +242,8 @@ int DrvFR::PrintString(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 	p.len = 41;
 
 	if (!Connected) return -1;
@@ -248,6 +268,8 @@ int DrvFR::PrintStringWithFont(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 	p.len = 41;
 
 	if (!Connected) return -1;
@@ -273,6 +295,9 @@ int DrvFR::PrintWideString(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 21;
 
 	if (!Connected) return -1;
@@ -297,6 +322,9 @@ int DrvFR::FeedDocument(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 2;
 
 	if (!Connected) return -1;
@@ -322,6 +350,9 @@ int DrvFR::SetExchangeParam(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 3;
 
 	if (!Connected) return -1;
@@ -341,6 +372,9 @@ int DrvFR::GetExchangeParam(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 1;
 
 	if (!Connected) return -1;
@@ -362,15 +396,13 @@ int DrvFR::GetECRStatus(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
-	fflush(stdout);
 	if (conn->sendcommand(GET_ECR_STATUS, Password, &p) < 0) return -1;
-	fflush(stdout);
 	if (conn->readanswer(&a) < 0) { return -1; }
-	fflush(stdout);
 	if (a.buff[0] != GET_ECR_STATUS) { return -1; }
-	fflush(stdout);
 	if (errhand(&a))	return  ResultCode;
 
 	OperatorNumber = a.buff[2];
@@ -433,6 +465,9 @@ int DrvFR::GetDeviceMetrics(void)
 	int len = 0;
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 1;
 
 	if (!Connected) return -1;
@@ -457,6 +492,9 @@ int DrvFR::Test(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 1;
 
 	if (!Connected) return -1;
@@ -478,6 +516,9 @@ int DrvFR::InterruptTest(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -496,6 +537,9 @@ int DrvFR::ContinuePrinting(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -514,6 +558,9 @@ int DrvFR::OpenDrawer(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 1;
 
 	if (!Connected) return -1;
@@ -535,6 +582,9 @@ int DrvFR::PrintDocumentTitle(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 32;
 
 	if (!Connected) return -1;
@@ -557,6 +607,8 @@ int DrvFR::ResetSettings(void)
 {
 	parameter  p;
 
+	memset(&p, 0, sizeof(p));
+
 	if (!Connected) return -1;
 
 	if (conn->sendcommand(RESET_SETTINGS, Password, &p) < 0) return -1;
@@ -568,6 +620,8 @@ int DrvFR::ResetSummary(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -582,6 +636,9 @@ int DrvFR::Buy(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 55;
 
 	if (!Connected) return -1;
@@ -615,6 +672,9 @@ int DrvFR::ReturnBuy(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 55;
 
 	if (!Connected) return -1;
@@ -648,6 +708,9 @@ int DrvFR::Sale(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 55;
 
 	if (!Connected) return -1;
@@ -681,6 +744,9 @@ int DrvFR::ReturnSale(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 55;
 
 	if (!Connected) return -1;
@@ -714,6 +780,8 @@ int DrvFR::CancelCheck(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -732,6 +800,9 @@ int DrvFR::CashIncome(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 5;
 
 	if (!Connected) return -1;
@@ -756,6 +827,9 @@ int DrvFR::CashOutcome(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 5;
 
 	if (!Connected) return -1;
@@ -780,6 +854,9 @@ int DrvFR::Charge(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 49;
 
 	if (!Connected) return -1;
@@ -810,6 +887,9 @@ int DrvFR::StornoCharge(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 49;
 
 	if (!Connected) return -1;
@@ -840,6 +920,9 @@ int DrvFR::Discount(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 49;
 
 	if (!Connected) return -1;
@@ -870,6 +953,9 @@ int DrvFR::StornoDiscount(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	p.len = 49;
 
 	if (!Connected) return -1;
@@ -900,6 +986,8 @@ int DrvFR::CheckSubTotal(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -920,6 +1008,8 @@ int DrvFR::CloseCheck(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -961,6 +1051,8 @@ int DrvFR::Storno(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -994,6 +1086,8 @@ int DrvFR::PrintReportWithCleaning(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -1013,6 +1107,8 @@ int DrvFR::PrintReportWithoutCleaning(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -1032,6 +1128,8 @@ int DrvFR::PrintOperationReg(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -1046,6 +1144,8 @@ int DrvFR::DampRequest(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -1066,6 +1166,9 @@ int DrvFR::GetData(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1087,6 +1190,9 @@ int DrvFR::InterruptDataStream(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1101,6 +1207,9 @@ int DrvFR::GetCashReg(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1125,6 +1234,9 @@ int DrvFR::GetOperationReg(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1148,6 +1260,9 @@ int DrvFR::SetSerialNumber(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1167,6 +1282,9 @@ int DrvFR::SetPointPosition(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1185,6 +1303,9 @@ int DrvFR::SetTime(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1205,6 +1326,9 @@ int DrvFR::SetDate(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1225,6 +1349,9 @@ int DrvFR::ConfirmDate(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1244,6 +1371,7 @@ int DrvFR::ConfirmDate(void)
 int DrvFR::InitTable(void)
 {
 	parameter  p;
+	memset(&p, 0, sizeof(p));
 
 	if (!Connected) return -1;
 
@@ -1255,6 +1383,9 @@ int DrvFR::WriteTable(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	int      len;
 	char    *tmp;
 
@@ -1289,6 +1420,9 @@ int DrvFR::ReadTable(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 	int      len;
 
 	if (!Connected) return -1;
@@ -1315,6 +1449,9 @@ int DrvFR::GetFieldStruct(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1340,6 +1477,9 @@ int DrvFR::GetTableStruct(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1362,6 +1502,9 @@ int DrvFR::WriteLicense(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1381,6 +1524,9 @@ int DrvFR::ReadLicense(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1399,6 +1545,9 @@ int DrvFR::InitFM(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1413,6 +1562,9 @@ int DrvFR::Fiscalization(void)
 {
 	parameter  p;
 	answer 	   a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1443,6 +1595,9 @@ int DrvFR::FiscalReportForDatesRange(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1476,6 +1631,9 @@ int DrvFR::FiscalReportForSessionRange(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1504,6 +1662,9 @@ int DrvFR::InterruptFullReport(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1518,6 +1679,9 @@ int DrvFR::GetFiscalizationParameters(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1544,6 +1708,9 @@ int DrvFR::GetFMRecordsSum(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1574,6 +1741,9 @@ int DrvFR::GetLastFMRecordDate(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1594,6 +1764,9 @@ int DrvFR::GetRangeDatesAndSessions(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1659,6 +1832,9 @@ int DrvFR::LoadLineData(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1682,6 +1858,9 @@ int DrvFR::Draw(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1705,6 +1884,9 @@ int DrvFR::PrintBarCode(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1728,6 +1910,9 @@ int DrvFR::OpenCheck(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1749,6 +1934,8 @@ int DrvFR::FNGetStatus(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -1757,6 +1944,21 @@ int DrvFR::FNGetStatus(void)
 	if (conn->sendcommand(FN_GET_STATUS, Password, &p) < 0) return -1;
 	if (conn->readanswer(&a) < 0) return -1;
 	if ((a.buff[0] != 0xFF) || (a.buff[1] != (FN_GET_STATUS & 0xFF))) return -1;
+
+	evaldate(&a.buff[9], &Date);
+	evaldate(&a.buff[12], &Time);
+	memset(SerialNumber, 0, sizeof(SerialNumber));
+	memcpy(SerialNumber, &a.buff[14], 16);
+	DocumentNumber		= evalint(&a.buff[29], 3);
+
+	#ifdef DEBUG
+		printf("Buff [%d]:\n", a.len);
+		int i = 0;
+		while (i < a.len)
+			{ printf (" %02X", a.buff[i]); i++; }
+		printf("\n");
+		fflush(stdout);
+	#endif
 
 	if (errhand(&a) != 0) return ResultCode;
 
@@ -1767,6 +1969,9 @@ int DrvFR::FNCloseCheckEx(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
@@ -1818,9 +2023,8 @@ int DrvFR::FNCloseCheckEx(void)
 	strncpy((char*)p.buff + 86, (char*)StringForPrinting, 20);
 	p.buff[117] = TaxType;
 
-	printf("fn: FNCloseCheckExt >>>\n");
-
 	if (conn->sendcommand(FN_CLOSE_CHECK_EX, Password, &p) < 0) return -1;
+	delay_ms(50);
 	if (conn->readanswer(&a) < 0) return -1;
 	if ((a.buff[0] != 0xFF) || (a.buff[1] != (FN_CLOSE_CHECK_EX & 0xFF))) return -1;
 
@@ -1828,7 +2032,7 @@ int DrvFR::FNCloseCheckEx(void)
 	Change = evalint64((unsigned char*)&a.buff + 3, 5);
 	Change /= 100;
 
-	printf("Oper: %d Change: %f\n", OperatorNumber, Change);
+//	printf("Oper: %d Change: %f\n", OperatorNumber, Change);
 
 	if (errhand(&a) != 0) return ResultCode;
 
@@ -1839,10 +2043,12 @@ int DrvFR::FNOperation(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
 
 	if (!Connected) return -1;
 
-	memset(&p, 0, sizeof(p));
 	p.len = 160;
 
 	__int64_t quant = llround(Quantity * 1000000);
@@ -1865,8 +2071,6 @@ int DrvFR::FNOperation(void)
 	//	printf("%02X|", p.buff[i]);
 	//printf("\n");
 
-	printf("fn: FNOperation >>>\n");
-
 	if (conn->sendcommand(FN_OPERATION, Password, &p) < 0) return -1;
 	if (conn->readanswer(&a) < 0) return -1;
 	if ((a.buff[0] != 0xFF) || (a.buff[1] != (FN_OPERATION & 0xFF))) return -1;
@@ -1887,6 +2091,8 @@ int DrvFR::FNOpenSession(void)
 {
 	parameter  p;
 	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
 
 	if (!Connected) return -1;
 
@@ -1936,20 +2142,158 @@ int DrvFR::CheckConnection(void)
 			Connected = true;
 			conn->readanswer(&a);
 			while ((tmout++ < 5) && (conn->checkstate() == ACK))
+			{
+				delay_ms(50);
 				conn->readanswer(&a);
+			}
 			return 1;
-		case -1:
+		case 0xFF:
 		#ifdef DEBUG
 			printf("fn: CheckConnection [ERR]\n");
 		#endif
 			tries++;
-		fflush(stdout);
-		};
-	};
+			fflush(stdout);
+		}
+	}
 	#ifdef DEBUG
 	printf("fn: CheckConnection FAILED[%d]\n", tries);
 	#endif
-	Connected = false;
+	Disconnect();
 	return -1;
+}
+//-----------------------------------------------------------------------------
+int DrvFR::FNCancelCheck(void)
+{
+	parameter  p;
+	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+	p.len = 5;
+
+	if (!Connected) return -1;
+
+	if (conn->sendcommand(FN_CANCEL_CHECK, Password, &p) < 0) return -1;
+	if (conn->readanswer(&a) < 0) return -1;
+	if (a.buff[0] != CANCEL_CHECK) return -1;
+
+	if (errhand(&a) != 0) return ResultCode;
+
+	OperatorNumber = a.buff[2];
+
+	return 0;
+}
+//-----------------------------------------------------------------------------
+int DrvFR::FNGetInfoExchangeStatus(void)
+{
+	parameter  p;
+	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
+
+	if (!Connected) return -1;
+
+	p.len = 5;
+
+	if (conn->sendcommand(FN_FNGETINFOEXCHANGESTATUS, Password, &p) < 0) return -1;
+	if (conn->readanswer(&a) < 0) return -1;
+	if ((a.buff[0] != 0xFF) || (a.buff[1] != (FN_FNGETINFOEXCHANGESTATUS & 0xFF))) return -1;
+
+	if (a.len > 15)
+	{
+		InfoExchangeStatus = a.buff[2];
+		MessageState 		= evalint(&a.buff[3], 2);
+		MessageCount 		= evalint(&a.buff[5], 2);
+		DocumentNumber		= evalint(&a.buff[7], 4);
+		evaldate(&a.buff[9], &Date);
+	#ifdef DEBUG
+		printf("[FNGetInfoExchangeStatus]: InfoExchangeStatus:%0X  MessageState: %d MessageCount: %d DocumentNumber: %d Date: %0X Time: %0X\n", InfoExchangeStatus, MessageState, MessageCount, DocumentNumber, Date, Time);
+		fflush(stdout);
+	#endif
+	}
+
+	if (errhand(&a) != 0) return ResultCode;
+
+	return 0;
+}
+//-----------------------------------------------------------------------------
+int DrvFR::FNRequestFiscalDocumentTLV(void)
+{
+	parameter  p;
+	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
+	if (!Connected) return -1;
+
+	p.len = 4;
+	memcpy(p.buff, &DocumentNumber, sizeof(DocumentNumber));
+
+	if (conn->sendcommand(FN_FNREQUESTFISCALDOCUMENTTLV, Password, &p) < 0) return -1;
+	delay_ms(500);
+	if (conn->readanswer(&a) < 0) return -1;
+	if ((a.buff[0] != 0xFF) || (a.buff[1] != (FN_FNREQUESTFISCALDOCUMENTTLV & 0xFF))) return -1;
+
+	if ((a.len > 6) && (a.buff[2] == 0x00))
+	{
+		DocumentType 	= evalint(&a.buff[3], 2);
+		DataLength 		= evalint(&a.buff[5], 2);
+	#ifdef DEBUG
+		printf("[FNRequestFiscalDocumentTLV]: DocumentType:%d  DataLength: %d\n", DocumentType, DataLength);
+		fflush(stdout);
+	#endif
+	}
+
+	if (errhand(&a) != 0) return ResultCode;
+
+	return 0;
+}
+//-----------------------------------------------------------------------------
+int DrvFR::FNReadFiscalDocumentTLV(void)
+{
+	int dataLength = DataLength;
+	parameter  p;
+	answer     a;
+	memset(&p, 0, sizeof(p));
+	memset(&a, 0, sizeof(a));
+
+	if (!Connected) return -1;
+
+	if (dataLength < 5) return -1;
+
+	int index = 0;
+	memset(TLVData, 0, sizeof(TLVData));
+	#ifdef DEBUG
+		printf("[FNReadFiscalDocumentTLV]: DataLength: %d\n", DataLength);
+		fflush(stdout);
+	#endif
+	while (dataLength >= 0)
+	{
+		p.len = 0;
+
+		if (conn->sendcommand(FN_FNREADFISCALDOCUMENTTLV, Password, &p) < 0) return -1;
+		if (conn->readanswer(&a) < 0) return -1;
+
+		if ((a.buff[0] != 0xFF) || (a.buff[1] != (FN_FNREADFISCALDOCUMENTTLV & 0xFF))) return -1;
+
+		if (a.len == 3) return 1;
+
+		memcpy((TLVData+index), &a.buff[3], (a.len - 3));
+		index += (a.len - 3);
+		dataLength -= (a.len - 3);
+		int i = 3;
+	#ifdef DEBUG
+		printf("Buff [%d]:\n", a.len);
+		while (i < a.len)
+			{ printf (" %02X", a.buff[i]); i++; }
+		printf("\n");
+		fflush(stdout);
+	#endif
+		delay_ms(20);
+	}
+
+	if (errhand(&a) != 0) return ResultCode;
+
+	return 0;
 }
 //-----------------------------------------------------------------------------
